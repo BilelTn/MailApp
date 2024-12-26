@@ -9,5 +9,5 @@ COPY app-release.aab .
 COPY target/presence-0.0.1-SNAPSHOT.jar /app/presence-0.0.1-SNAPSHOT.jar
 COPY src/main/resources/application.properties /app/src/main/resources/application.properties
 
-EXPOSE 8089
+EXPOSE 8087
 CMD ["java", "-jar", "/app/presence-0.0.1-SNAPSHOT.jar"]
