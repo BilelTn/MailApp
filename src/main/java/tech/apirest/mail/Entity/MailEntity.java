@@ -21,6 +21,7 @@ public class MailEntity {
     private String subject;
     private String date;
     @Lob
+    @Column(columnDefinition = "text")
     private String body;
     private Boolean isRead=false;
     private String joinedName;
