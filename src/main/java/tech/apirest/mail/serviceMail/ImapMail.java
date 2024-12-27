@@ -25,9 +25,9 @@ import java.util.Properties;
 
 @Service
 public class ImapMail {
-        public List<MailEntity> readEmails(String user, String password) {
-            Mailhandler mailhandler=new Mailhandler();
-            List<Mailhandler> mailhandlerList=new ArrayList<>();
+    public List<MailEntity> readEmails(String user, String password) {
+        Mailhandler mailhandler=new Mailhandler();
+        List<Mailhandler> mailhandlerList=new ArrayList<>();
         String host="mail.apirest.tech";
         Message[] messages = new Message[0];
         Properties properties = new Properties();
@@ -39,7 +39,7 @@ public class ImapMail {
         properties.put("mail.imap.ssl.trust", "mail.apirest.tech"); // Confiance au certificat SSL
 
         Session session = Session.getInstance(properties);
-            List<MailEntity> mailEntityList=new ArrayList<>();
+        List<MailEntity> mailEntityList=new ArrayList<>();
         try (Store store = session.getStore("imap")) {
             // Connexion au serveur IMAP
             store.connect(user, password);
@@ -133,7 +133,7 @@ public class ImapMail {
 
                 // Pour récupérer le contenu du fichier (comme un flux binaire), vous pouvez faire :
                 InputStream inputStream = bodyPart.getInputStream();
-               // saveAttachment(inputStream, fileName);
+                // saveAttachment(inputStream, fileName);
             } else if (bodyPart.getContent() instanceof MimeMultipart) {
                 // Gérer les parties multipart imbriquées
                 result.append(getTextFromMimeMultipart((MimeMultipart) bodyPart.getContent()));
@@ -142,7 +142,7 @@ public class ImapMail {
         return result.toString();
     }
 
-//    private void saveAttachment(InputStream inputStream, String fileName) throws IOException {
+    //    private void saveAttachment(InputStream inputStream, String fileName) throws IOException {
 //        // Par exemple, vous pouvez sauvegarder l'attachement dans un répertoire spécifique
 //        Path path = Paths.get("/path/to/save/attachments", fileName);
 //        Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
@@ -150,19 +150,19 @@ public class ImapMail {
 //    }
     @Autowired
     UsersRepo usersRepo;
-public Users findLogged() {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (authentication != null) {
-        boolean isAdmin = false;
+    public Users findLogged() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null) {
+            boolean isAdmin = false;
 
-        String utilisateur = ((UserDetails) authentication.getPrincipal()).getUsername();
+            String utilisateur = ((UserDetails) authentication.getPrincipal()).getUsername();
 
 
-        Users appUser1 = usersRepo.findByUserid(utilisateur);
+            Users appUser1 = usersRepo.findByUserid(utilisateur);
 
-        return appUser1;
+            return appUser1;
 
-    } else return null;
-}
+        } else return null;
+    }
 
 }

@@ -15,8 +15,8 @@ import tech.apirest.mail.Repo.VirtualRepo;
 import tech.apirest.mail.Services.TransportInterfaceImpl;
 import tech.apirest.mail.Services.UsersInterfaceImpl;
 import tech.apirest.mail.Services.VirtualInterfaceImpl;
-import tech.apirest.mail.serviceMail.EmailService;
-import tech.apirest.mail.serviceMail.ImapMail;
+//import tech.apirest.mail.serviceMail.EmailService;
+//import tech.apirest.mail.serviceMail.ImapMail;
 
 import javax.mail.Message;
 import javax.persistence.EnumType;
@@ -35,12 +35,12 @@ public class MailApplication {
 	UsersInterfaceImpl usersInterface;
 	@Autowired
 	VirtualInterfaceImpl virtualInterface;
-	@Autowired
-	ImapMail imapMail;
+//	@Autowired
+//	ImapMail imapMail;
 	@Enumerated(EnumType.STRING)
 	EmailType emailType;
-	@Autowired
-	EmailService emailService;
+//	@Autowired
+//	EmailService emailService;
 //	@Bean
 //	PasswordEncoder passwordEncoder () {
 //		return new BCryptPasswordEncoder();

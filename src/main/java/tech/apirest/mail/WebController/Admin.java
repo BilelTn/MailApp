@@ -96,8 +96,8 @@ public class Admin {
         model.addAttribute("name",name);
         return "createAccount";
     }
-@PostMapping(value = "/createMail")
-public String createMail(Model model,@ModelAttribute(value = "user")Users users){
+    @PostMapping(value = "/createMail")
+    public String createMail(Model model,@ModelAttribute(value = "user")Users users){
         if(users!=null) {
 
             Users users1 = usersRepo.findByUserid(users.getUserid() + "@apirest.tech");
@@ -126,27 +126,27 @@ public String createMail(Model model,@ModelAttribute(value = "user")Users users)
             Virtual virtual=new Virtual();
             virtual.setAddress(users.getUserid() + "@apirest.tech");
             virtual.setUserid(users.getUserid() + "@apirest.tech");
-           // System.out.println(virtual);
+            // System.out.println(virtual);
             virtualRepo.save(virtual);
 
         }
         return "redirect:/login";
-}
+    }
 
     @GetMapping(value = "/accueilMail")
     public String accueilMail(Model model, HttpSession session, Authentication authentication, HttpServletRequest request, HttpServletResponse response) throws MessagingException, IOException {
-     String us=((UserDetails)  authentication.getPrincipal()).getUsername();
-     System.out.println("Users found "+us);
-BCryptPasswordEncoder encoder=new BCryptPasswordEncoder();
+        String us=((UserDetails)  authentication.getPrincipal()).getUsername();
+        System.out.println("Users found "+us);
+        BCryptPasswordEncoder encoder=new BCryptPasswordEncoder();
 //encoder.
-System.out.println("mdp trouvé  :"+findLogged().getPassword());
+        System.out.println("mdp trouvé  :"+findLogged().getPassword());
         List<MailEntity> mailEntityListImap=imapMail.readEmails(findLogged().getUserid(),findLogged().getTt());
         List<MailEntity> mailEntityList=mailRepo.findAllByMailUser(findLogged());
 
         System.out.println("Taille de la table spring : "+mailEntityList.size());
         System.out.println( " taille du tableau : " +mailEntityListImap.size());
         int size=mailEntityListImap.size();
-List<Message> messages1=new ArrayList<>();
+        List<Message> messages1=new ArrayList<>();
 //for(MailEntity mailhandler:mailhandlerList){
 //    messages1.add(mailhandler.getMessages());
 //}
@@ -189,41 +189,41 @@ List<Message> messages1=new ArrayList<>();
 //                   System.out.println("Enregistré avec sucess .. ");
 
 
-            //}
+        //}
 //            else
 //                {
 //                    System.out.println("Date deja existant : "+mailhandler.getMessages().getSentDate().toString());
 //                }
-            System.out.println("Sortie de for message");
+        System.out.println("Sortie de for message");
 
-      //  }
+        //  }
 
         return "accueilMail";
     }
-@GetMapping(value = "/new")
-public String newMail(Model model){
+    @GetMapping(value = "/new")
+    public String newMail(Model model){
         MailDetails mailDetails=new MailDetails();
         model.addAttribute("mailDetails",mailDetails);
         return "newMail";
-}
-@PostMapping(value = "/sendMail")
-public String sendMail(Model model,@ModelAttribute(value ="mailDetails" )MailDetails mailDetails){
+    }
+    @PostMapping(value = "/sendMail")
+    public String sendMail(Model model,@ModelAttribute(value ="mailDetails" )MailDetails mailDetails){
         System.out.println(mailDetails);
         emailController.sendEmail(mailDetails.to,mailDetails.subject,mailDetails.message,"bilel@apirest.tech","123456");
         return "redirect:/new";
-}
-@GetMapping(value = "/inbox")
-public String inboxById(Model model, @RequestParam(value = "id" ,defaultValue = "")Integer id) throws MessagingException {
+    }
+    @GetMapping(value = "/inbox")
+    public String inboxById(Model model, @RequestParam(value = "id" ,defaultValue = "")Integer id) throws MessagingException {
         List<MailEntity> message=imapMail.readEmails(findLogged().getUserid(), findLogged().getTt());
 //        Message message1=message.get
-    //        System.out.println(message1.getSubject());
+        //        System.out.println(message1.getSubject());
 //        for (Message message2:message){
 //            System.out.println(message2.getMessageNumber());
 //        }
 
-       // model.addAttribute("message",message2);
+        // model.addAttribute("message",message2);
         return "Inbox";
-}
+    }
 
     @Data
     @NoArgsConstructor
