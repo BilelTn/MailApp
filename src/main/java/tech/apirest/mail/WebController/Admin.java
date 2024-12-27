@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -23,19 +22,10 @@ import tech.apirest.mail.Repo.VirtualRepo;
 import tech.apirest.mail.serviceMail.EmailController;
 import tech.apirest.mail.serviceMail.ImapMail;
 
-import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.persistence.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Controller
 @Transactional
@@ -54,20 +44,15 @@ public class Admin {
         this.emailController = emailController;
         this.imapMail = imapMail;
     }
-    public Users findLogged() {
+    public Optional<Users> findLogged() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null) {
-            boolean isAdmin = false;
-
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
             String utilisateur = ((UserDetails) authentication.getPrincipal()).getUsername();
-
-
-            Users appUser1 = usersRepo.findByUserid(utilisateur);
-
-            return appUser1;
-
-        } else return null;
+            return Optional.ofNullable(usersRepo.findByUserid(utilisateur));
+        }
+        return Optional.empty();
     }
+
     @GetMapping(path = "/login")
     public String loginWeb(Model model) {
         LogInfo logInfo = new LogInfo("", "");
@@ -134,70 +119,32 @@ public class Admin {
     }
 
     @GetMapping(value = "/accueilMail")
-    public String accueilMail(Model model, HttpSession session, Authentication authentication, HttpServletRequest request, HttpServletResponse response) throws MessagingException, IOException {
-        String us=((UserDetails)  authentication.getPrincipal()).getUsername();
-        System.out.println("Users found "+us);
-        BCryptPasswordEncoder encoder=new BCryptPasswordEncoder();
-//encoder.
-        System.out.println("mdp trouvé  :"+findLogged().getPassword());
-        List<MailEntity> mailEntityListImap=imapMail.readEmails(findLogged().getUserid(),findLogged().getTt());
-        List<MailEntity> mailEntityList=mailRepo.findAllByMailUser(findLogged());
+    public String accueilMail(Model model) throws MessagingException, IOException {
 
+        List<MailEntity> mailEntityListImap=imapMail.readEmails(findLogged().get().getUserid(),findLogged().get().getTt());
+        if (!mailEntityListImap.isEmpty()){
+            List<MailEntity> mailEntityList1=new ArrayList<>();
+            Set<MailEntity> existingMails = new HashSet<>(mailRepo.findAllByMailUser(findLogged().get()));
+            for (MailEntity mail : mailEntityListImap) {
+                if (!existingMails.contains(mail)) {
+                    mailEntityList1.add(mail);
+                }
+            }
+            mailRepo.saveAll(mailEntityList1);
+        }
+        List<MailEntity> mailEntityList=mailRepo.findAllByMailUser(findLogged().get());
         System.out.println("Taille de la table spring : "+mailEntityList.size());
         System.out.println( " taille du tableau : " +mailEntityListImap.size());
-        int size=mailEntityListImap.size();
-        List<Message> messages1=new ArrayList<>();
-//for(MailEntity mailhandler:mailhandlerList){
-//    messages1.add(mailhandler.getMessages());
-//}
-        Set<String> existingDate=mailEntityList.stream().map(MailEntity::getDate).collect(Collectors.toSet());
-        System.out.println("existing date avant ajout"+existingDate);
-        model.addAttribute("size",size);
-        for (MailEntity mail:mailEntityListImap){
-            if (!existingDate.contains(mail.getDate())){
-                mailRepo.save(mail);
-                System.out.println("Date nouveau trouvé"+mail.getDate());
-                existingDate.add(mail.getDate());
-                System.out.println(existingDate);
-
+        int nombreTotal=mailEntityList.size();
+        int nombreNonLu=0;
+        for (MailEntity mail:mailEntityList){
+            if (!mail.getIsRead()){
+                nombreNonLu=nombreNonLu +1;
             }
-            System.out.println(mail);
         }
-
+        model.addAttribute("total",nombreTotal);
+        model.addAttribute("nonLu",nombreNonLu);
         model.addAttribute("messages",mailEntityList);
-
-
-//        for (Mailhandler mailhandler:mailhandlerList) {
-//            System.out.println("Entree dans for message : "+mailhandler.getMessages().getSentDate().toString());
-//
-//                if(!existingDate.contains(mailhandler.getMessages().getSentDate().toString())){
-//                    System.out.println("Condition date if juste");
-//                    MailEntity mailEntity=new MailEntity();
-//                    mailEntity.setMailUser(findLogged());
-//                    mailEntity.setDate(mailhandler.getMessages().getSentDate().toString());
-//                    mailEntity.setSender(String.valueOf(mailhandler.getMessages().getFrom()[0]));
-//                    mailEntity.setSubject(mailhandler.getMessages().getSubject());
-//                    mailEntity.setBody(imapMail.getTextFromMessage(mailhandler.getMessages()));
-//                    mailEntity.setIsRead(false);
-//                    mailEntity.setJoinedName("");
-//                    mailEntity.setPathJoined("");
-//                    mailEntity.setType(EmailType.RECU);
-//                    existingDate.add(mailhandler.getMessages().getSentDate().toString());
-//                    System.out.println("existing date apres ajout"+existingDate);
-//
-//                    System.out.println("Corps du mailhandler : "+mailEntity.getBody());
-//                   System.out.println("Enregistré avec sucess .. ");
-
-
-        //}
-//            else
-//                {
-//                    System.out.println("Date deja existant : "+mailhandler.getMessages().getSentDate().toString());
-//                }
-        System.out.println("Sortie de for message");
-
-        //  }
-
         return "accueilMail";
     }
     @GetMapping(value = "/new")
@@ -214,7 +161,7 @@ public class Admin {
     }
     @GetMapping(value = "/inbox")
     public String inboxById(Model model, @RequestParam(value = "id" ,defaultValue = "")Integer id) throws MessagingException {
-        List<MailEntity> message=imapMail.readEmails(findLogged().getUserid(), findLogged().getTt());
+        List<MailEntity> message=imapMail.readEmails(findLogged().get().getUserid(), findLogged().get().getTt());
 //        Message message1=message.get
         //        System.out.println(message1.getSubject());
 //        for (Message message2:message){

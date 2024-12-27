@@ -7,29 +7,26 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import tech.apirest.mail.Entity.EmailType;
 import tech.apirest.mail.Entity.MailEntity;
-import tech.apirest.mail.Entity.Mailhandler;
 import tech.apirest.mail.Entity.Users;
+import tech.apirest.mail.Repo.MailRepo;
 import tech.apirest.mail.Repo.UsersRepo;
 
 import javax.mail.*;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.search.FlagTerm;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 @Service
 public class ImapMail {
+    @Autowired
+    MailRepo mailRepo;
     public List<MailEntity> readEmails(String user, String password) {
-        Mailhandler mailhandler=new Mailhandler();
-        List<Mailhandler> mailhandlerList=new ArrayList<>();
+
+
         String host="mail.apirest.tech";
-        Message[] messages = new Message[0];
+
         Properties properties = new Properties();
         properties.put("mail.store.protocol", "imap");
         properties.put("mail.imap.host", host);
@@ -49,16 +46,12 @@ public class ImapMail {
             if (!inbox.isOpen()) {
                 inbox.open(Folder.READ_WRITE);
             }
-
-            // Récupérer les messages
-            messages = inbox.getMessages();
-            System.out.println("Nombre de messages : " + messages.length);
-
+            List<MailEntity> listMailSpring=mailRepo.findAllByMailUser(findLogged().get());
+            Message[] messages = (listMailSpring.isEmpty())?inbox.getMessages():inbox.search(new FlagTerm(new Flags(Flags.Flag.SEEN), false));
             for (Message message : messages) {
                 try {
-                    System.out.println("Id unique du message : "+message.getInputStream());
                     MailEntity mailEntity=new MailEntity();
-                    mailEntity.setMailUser(findLogged());
+                    mailEntity.setMailUser(findLogged().get());
                     mailEntity.setDate(message.getSentDate().toString());
                     mailEntity.setSender(message.getFrom()[0].toString());
                     mailEntity.setSubject(message.getSubject());
@@ -67,12 +60,8 @@ public class ImapMail {
                     mailEntity.setJoinedName("");
                     mailEntity.setPathJoined("");
                     mailEntity.setType(EmailType.RECU);
+                    mailEntity.setUniqueId(Arrays.toString(message.getHeader("Message-ID")));
                     mailEntityList.add(mailEntity);
-
-
-
-
-
 
                 } catch (MessagingException e) {
                     System.err.println("Erreur lors de l'affichage d'un message : " + e.getMessage());
@@ -80,9 +69,7 @@ public class ImapMail {
                 }
             }
 
-            for (Mailhandler mailhandler1:mailhandlerList){
-                System.out.println("Apres boucle form imap : "+mailhandler1.getBody().toString());
-            }
+
 
             // Fermer le dossier
             inbox.close(false);
@@ -150,19 +137,13 @@ public class ImapMail {
 //    }
     @Autowired
     UsersRepo usersRepo;
-    public Users findLogged() {
+    public Optional<Users> findLogged() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null) {
-            boolean isAdmin = false;
-
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
             String utilisateur = ((UserDetails) authentication.getPrincipal()).getUsername();
-
-
-            Users appUser1 = usersRepo.findByUserid(utilisateur);
-
-            return appUser1;
-
-        } else return null;
+            return Optional.ofNullable(usersRepo.findByUserid(utilisateur));
+        }
+        return Optional.empty();
     }
 
 }

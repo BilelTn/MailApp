@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface MailRepo extends JpaRepository<MailEntity,Long> {
     List<MailEntity> findAllByMailUser(Users user);
+    boolean existsByUniqueId(String messageId);
 }
