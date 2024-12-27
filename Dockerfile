@@ -4,7 +4,6 @@ RUN apk add --no-cache maven
 
 COPY pom.xml .
 COPY src ./src
-COPY app-release.aab .
 
 
 
