@@ -8,4 +8,4 @@ COPY src ./src
 
 
 EXPOSE 8087
-CMD ["java", "-jar", "/app/presence-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "/app/mail-0.0.1-SNAPSHOT.jar"]
