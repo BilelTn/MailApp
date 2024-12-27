@@ -4,6 +4,8 @@ RUN apk add --no-cache maven
 
 COPY pom.xml .
 COPY src ./src
+COPY target/mail-0.0.1-SNAPSHOT.jar /app/mail-0.0.1-SNAPSHOT.jar
+
 
 
 
